@@ -1,7 +1,7 @@
 class EventMisp:
-    def __init__(self, idEvent, dateEvent, infoEvent, timestampUpdate, isPublished, creatorOrgName):
+    def __init__(self, idEvent, firstUpdate, infoEvent, timestampUpdate, isPublished, creatorOrgName):
         self.idEvent = idEvent
-        self.dateEvent = dateEvent
+        self.firstUpdate = firstUpdate
         self.infoEvent = infoEvent
         self.timestampUpdate = timestampUpdate
         self.isPublished = isPublished
@@ -11,9 +11,14 @@ class EventMisp:
         print("__________________________________________________________")
         print("Event : ")
         print(self.idEvent)
-        print(self.dateEvent)
+        print(self.firstUpdate)
         print(self.infoEvent)
         print(self.timestampUpdate)
         print(self.isPublished)
         print(self.creatorOrgName)
         print("__________________________________________________________")
+
+
+def printEvents(events):
+    for e in events:
+        e.prettyPrint()
