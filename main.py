@@ -23,6 +23,8 @@ MISP_KEY = os.getenv('MISP_KEY')
 
 API_URL = os.getenv('API_URL')
 
+TIME_REQUEST = os.getenv('TIME_REQUEST')
+
 
 def httpPost(url, headersP, bodyP):
     http = httplib2.Http()
@@ -36,12 +38,12 @@ def httpPost(url, headersP, bodyP):
 
 def getEvents():
     headers = {'Authorization': MISP_KEY, 'Accept': 'application/json', 'Content-type': 'application/json'}
-    body = {"returnFormat": "json", "last": "5m"}
+    body = {"returnFormat": "json", "last": TIME_REQUEST+"m"}
     result = httpPost(API_URL, headers, body)
     response = json.loads(result)
     i = 0
     events = []
-    print("__________________________________________________________")
+    print("__________________")
     while True:
         try:
             events.append(EventMisp(response["response"][i]["Event"]["id"],
@@ -62,36 +64,72 @@ def getEvents():
 
 def getTweetPrefix(e):
     if e.timestampUpdate == e.firstUpdate:
-        return "Update!"
-    else:
         return ""
+    else:
+        return "Update!"
 
 
 def getTweetSuffix(e):
-    if e.isPublished and (len(e.infoEvent) + len(e.creatorOrgName) + len(str(e.firstUpdate)) + 26) < 280:
+    if (len(e.infoEvent) + len(e.creatorOrgName) + len(str(e.firstUpdate)) + 26) < 280:
         return f"has been attacked : {e.infoEvent}"
-    elif e.infoEvent.contains("phishing"):
+    elif "phishing" in e.infoEvent:
         return f"has been targeted by a phishing campaign"
-    elif e.infoEvent.contains("malware"):
+    elif "malware" in e.infoEvent:
         return f"has been targeted by a malware attack"
     else:
         return f". No more information could be given"
 
 
+def addOrg(data, name):
+    data['Orgs'].append({
+        'name': name,
+        'nbEvent': 1
+    })
+
+
+def testOrg(data, name, orgIfExist):
+    if len(data['Orgs']) > 0:
+        for org in data['Orgs']:
+            if org['name'] == name:
+                return True, org
+    return False, {}
+
+
+def updateOrg(orgExist, event, org, data):
+    if orgExist:
+        # if event.timestampUpdate == event.firstUpdate:
+        org['nbEvent'] += 1
+    else:
+        addOrg(data, event.creatorOrgName)
+
+
 def tweetEvents(apiTweet):
-    print("______")
+    print("___Tweet events___")
     events = getEvents()
     printEvents(events)
     # Create a tweet
-    try:
-        for e in events:
-            if e.isPublished and (len(e.infoEvent) + len(e.creatorOrgName) + len(str(e.firstUpdate)) + 26) < 280:
+    org = {}
+    for e in events:
+        if e.isPublished:
+            with open('weekly.json') as json_file:
+                weeklyData = json.load(json_file)
+
+            orgExist, org = testOrg(weeklyData, e.creatorOrgName, org)
+            updateOrg(orgExist, e, org, weeklyData)
+
+            with open('weekly.json', 'w') as outfile:
+                json.dump(weeklyData, outfile, ensure_ascii=False)
+
+            try:
                 apiTweet.update_status(
                     f"{getTweetPrefix(e)} {e.creatorOrgName}, the {e.firstUpdate}, {getTweetSuffix(e)}")
+            except tweepy.error.TweepError as twperr:
+                print(twperr.reason)
+                pass
 
-    except tweepy.error.TweepError as twperr:
-        print(twperr.reason)
-        pass
+
+def weeklyTweet(apiTweet):
+    print("___Weekly tweet___")
 
 
 if __name__ == '__main__':
@@ -102,12 +140,9 @@ if __name__ == '__main__':
     # Create API object
     api = tweepy.API(auth)
 
-    # TODO Cas ou rien n'est publié pendant 1/2/3h
-
     tweetEvents(api)
-    schedule.every(5).minutes.do(tweetEvents, api)
-    # schedule.every().hour.do(job)
-    # schedule.every().day.at("10:30").do(job)
+    schedule.every(int(TIME_REQUEST)).minutes.do(tweetEvents, api)
+    # schedule.every().day.at("10:30").do(weeklyTweet, api)
 
     while 1:
         schedule.run_pending()
