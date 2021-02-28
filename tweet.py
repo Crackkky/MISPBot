@@ -63,7 +63,6 @@ def tweetEvents(apiTweet):
                     f"{getTweetPrefix(e)} {e.creatorOrgName}, the {e.firstUpdate} {getTweetSuffix(e)}")
             except tweepy.error.TweepError as twperr:
                 print(twperr.reason)
-                pass
 
 
 # Tweet the weekly report depending the weekly.json file
@@ -85,8 +84,7 @@ def weeklyTweet(apiTweet):
     try:
         apiTweet.update_status("Weekly report : \n\n"
                                "The company that reported the most attacks is : " + tabOrg[0][0] + "\nWith : " + str(
-                                tabOrg[0][1]) + " event" + ("s" if tabOrg[0][1] > 1 else "") + " reported this week!")
+            tabOrg[0][1]) + " event" + ("s" if tabOrg[0][1] > 1 else "") + " reported this week!")
 
     except tweepy.error.TweepError as twperr:
         print(twperr.reason)
-        pass
