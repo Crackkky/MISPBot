@@ -10,7 +10,7 @@ if __name__ == '__main__':
     tweetEvents(api)
 
     schedule.every(int(TIME_REQUEST)).minutes.do(tweetEvents, api)
-    schedule.every().Sunday.at("12:00").do(weeklyTweet, api)
+    schedule.every().sunday.at("12:00").do(weeklyTweet, api)
 
     while 1:
         schedule.run_pending()
