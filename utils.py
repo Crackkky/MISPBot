@@ -17,9 +17,10 @@ MISP_KEY = os.getenv('MISP_KEY')
 API_URL = os.getenv('API_URL')
 
 TIME_REQUEST = os.getenv('TIME_REQUEST')
+WEEKLY_FILE_NAME = os.getenv('WEEKLY_FILE_NAME')
 
 
-# Create an org to add it to the weekly.json file
+# Create an org to add it to the weekly file
 def addOrg(data, name):
     data['Orgs'].append({
         'name': name,
@@ -49,3 +50,7 @@ def updateOrg(orgExist, event, org, data):
 # Sort a dict
 def sortOrgDict(orgDict):
     return sorted(orgDict.items(), key=lambda item: item[1])
+
+
+def deleteWeeklyFile():
+    os.remove(WEEKLY_FILE_NAME)
