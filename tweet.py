@@ -61,7 +61,7 @@ def tweetEvents(apiTweet):
             # Tweet the event
             try:
                 apiTweet.update_status(
-                    f"{getTweetPrefix(e)} {e.creatorOrgName}, the {e.firstUpdate} {getTweetSuffix(e)}")
+                    f"{getTweetPrefix(e)} {e.creatorOrgName}, the {e.firstUpdate}{getTweetSuffix(e)}")
             except tweepy.error.TweepError as twperr:
                 print(twperr.reason)
 
